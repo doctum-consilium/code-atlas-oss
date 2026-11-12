@@ -1,0 +1,8 @@
+# osv-scanner exceptions: each one with a reason and an end date, so the decision comes back.
+
+[[IgnoredVulns]]
+id = "GHSA-g3hv-75wg-m249"
+ignoreUntil = 2026-12-12T00:00:00Z
+reason = """minimatch 10.x, development tool only (pulled by ESLint, never shipped). The fix
+exists only in 11.0.1, published on 2026-11-11, and ESLint 10 requires the 10.x line: forcing it
+would break the lint. Revisit with the next ESLint release."""

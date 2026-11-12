@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Leak guard on staged content, then lint and tests of the backend.
+set -euo pipefail
+root="$(git rev-parse --show-toplevel)"
+bash "$root/scripts/leak-guard.sh" --staged
+cd "$root/backend"
+uv run ruff check .
+uv run pytest -q

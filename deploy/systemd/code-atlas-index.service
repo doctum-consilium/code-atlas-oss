@@ -1,0 +1,15 @@
+[Unit]
+Description=code-atlas — index update (changed files only)
+After=code-atlas-api.service
+
+# Template: scripts/install.sh replaces @ROOT@ and @UV@ with this machine's paths.
+[Service]
+Type=oneshot
+WorkingDirectory=@ROOT@/backend
+# Lowest priority: the laptop stays responsive. The indexing thermal guard pauses above the
+# [thermal] limits of the settings.
+Nice=19
+IOSchedulingClass=idle
+CPUQuota=400%
+ExecStart=@UV@ run atlas corpus --processes 4
+ExecStart=@UV@ run atlas index

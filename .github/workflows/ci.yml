@@ -1,0 +1,194 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  KEYCLOAK: quay.io/keycloak/keycloak:25.0.6
+
+jobs:
+  backend:
+    name: Backend (lint, types, tests, security)
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: docker.io/paradedb/paradedb:v0.26.6-pg18
+        env:
+          POSTGRES_USER: atlas
+          POSTGRES_PASSWORD: atlas-ci
+          POSTGRES_DB: atlas_test
+        ports: ["55432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U atlas" --health-interval 5s --health-timeout 5s --health-retries 20
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      CODE_ATLAS_TEST_DSN: host=127.0.0.1 port=55432 user=atlas password=atlas-ci dbname=atlas_test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v5
+      - run: uv python install 3.11
+      - run: uv sync --group dev
+      - name: Ruff (lint + format)
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+      - name: Mypy strict
+        run: uv run mypy
+      - name: Tests (real ParadeDB) and coverage
+        run: uv run pytest -q --cov=atlas --cov-report=xml --cov-fail-under=85
+      - name: Coverage of changed lines (PR)
+        if: github.event_name == 'pull_request'
+        run: uv run diff-cover coverage.xml --compare-branch=origin/${{ github.base_ref }} --fail-under=80
+      - name: Bandit
+        run: uv run bandit -q -r atlas -s B101,B603,B607,B404
+      - name: pip-audit
+        run: |
+          uv export -q --no-dev --frozen --extra gpu --no-emit-project -o "$RUNNER_TEMP/requirements.txt"
+          uv run pip-audit -r "$RUNNER_TEMP/requirements.txt" --strict --disable-pip
+
+  contract:
+    name: OpenAPI contract up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: web/package-lock.json }
+      - run: uv python install 3.11 && cd backend && uv sync --group dev
+      - name: The contract follows the backend
+        run: cd backend && uv run atlas openapi --output ../contract/openapi.yaml && git diff --exit-code ../contract
+      - name: The TypeScript types follow the contract
+        run: cd web && npm ci && npm run contract && git diff --exit-code src/api/schema.d.ts
+
+  web:
+    name: Web front (lint, types, tests, build, audit)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: web/package-lock.json }
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - name: No high vulnerability in what ships
+        run: npm audit --omit=dev --audit-level=high
+
+  desktop:
+    name: Flutter desktop (analyze, tests, Linux build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with: { flutter-version: 3.47.4, channel: stable, cache: true }
+      - run: sudo apt-get update -q && sudo apt-get install -yq ninja-build libgtk-3-dev clang cmake pkg-config
+      - run: flutter pub get
+      - run: flutter analyze --fatal-infos
+      - run: flutter test --coverage
+      - run: flutter build linux --release
+
+  e2e:
+    name: End to end (${{ matrix.auth }} sign-in, API, browser)
+    runs-on: ubuntu-latest
+    needs: [backend, web]
+    strategy:
+      fail-fast: false
+      matrix:
+        auth: [token, oidc]
+    services:
+      db:
+        image: docker.io/paradedb/paradedb:v0.26.6-pg18
+        env:
+          POSTGRES_USER: atlas
+          POSTGRES_PASSWORD: atlas-ci
+          POSTGRES_DB: atlas
+        ports: ["55432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U atlas" --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      CODE_ATLAS_DSN: host=127.0.0.1 port=55432 user=atlas password=atlas-ci dbname=atlas
+      CODE_ATLAS_MODELS: fake
+      KC_ADMIN: admin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: web/package-lock.json }
+      - name: Throwaway secrets and settings
+        run: |
+          echo "KC_ADMIN_PASSWORD=$(openssl rand -hex 16)" >> "$GITHUB_ENV"
+          echo "KC_TEST_PASSWORD=$(openssl rand -hex 16)" >> "$GITHUB_ENV"
+          echo "CODE_ATLAS_DATA=$RUNNER_TEMP/atlas-data" >> "$GITHUB_ENV"
+          echo "CODE_ATLAS_CONFIG=$RUNNER_TEMP/config.toml" >> "$GITHUB_ENV"
+          sed 's/^mode = "token"/mode = "${{ matrix.auth }}"/' config/e2e.toml > "$RUNNER_TEMP/config.toml"
+      - name: Test Keycloak
+        if: matrix.auth == 'oidc'
+        run: |
+          docker run -d --name kc -p 127.0.0.1:8180:8080 -e KEYCLOAK_ADMIN=admin \
+            -e KEYCLOAK_ADMIN_PASSWORD="$KC_ADMIN_PASSWORD" "$KEYCLOAK" start-dev
+          for i in $(seq 90); do curl -fs http://127.0.0.1:8180/realms/master >/dev/null && break; sleep 2; done
+          python3 scripts/keycloak_test_realm.py --url http://127.0.0.1:8180
+      - name: Sample corpus and API
+        run: |
+          uv python install 3.11 && (cd backend && uv sync --group dev)
+          (cd backend && uv run atlas token && uv run python ../scripts/e2e_prepare.py)
+          echo "E2E_TOKEN=$(cat ~/.config/code-atlas-e2e/api-token)" >> "$GITHUB_ENV"
+          (cd backend && nohup uv run atlas serve --no-warm-up > "$RUNNER_TEMP/api.log" 2>&1 &)
+          for i in $(seq 60); do curl -fs http://127.0.0.1:8790/healthz >/dev/null && break; sleep 2; done
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8790/v1/me)" = 401
+      - name: Journey in Chromium
+        working-directory: web
+        env:
+          E2E_USER: e2e
+          E2E_PASSWORD: ${{ env.KC_TEST_PASSWORD }}
+          E2E_SEARCH: can_receive_shared_feed
+          E2E_EXPECTED: sharing.py
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          npx playwright test
+      - if: failure()
+        run: tail -50 "$RUNNER_TEMP/api.log"
+
+  hygiene:
+    name: Secrets, dependencies, scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Shell scripts (shellcheck)
+        run: shellcheck -x scripts/*.sh .githooks/*
+      - name: gitleaks (whole history)
+        run: |
+          base=https://github.com/gitleaks/gitleaks/releases/download/v8.30.1
+          curl -sSfLO "$base/gitleaks_8.30.1_linux_x64.tar.gz"
+          curl -sSfL "$base/gitleaks_8.30.1_checksums.txt" | grep linux_x64.tar.gz | sha256sum -c -
+          tar -xzf gitleaks_8.30.1_linux_x64.tar.gz gitleaks && ./gitleaks git --redact --no-banner .
+      - uses: google/osv-scanner-action/osv-scanner-action@v2.2.3
+        with:
+          scan-args: |-
+            --config=osv-scanner.toml
+            --lockfile=backend/uv.lock
+            --lockfile=web/package-lock.json
+            --lockfile=desktop/pubspec.lock

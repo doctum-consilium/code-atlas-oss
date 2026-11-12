@@ -1,0 +1,1008 @@
+components:
+  schemas:
+    ChunkOut:
+      description: A chunk found.
+      properties:
+        id:
+          title: Id
+          type: integer
+        kind:
+          title: Kind
+          type: string
+        language:
+          title: Language
+          type: string
+        line_end:
+          title: Line End
+          type: integer
+        line_start:
+          title: Line Start
+          type: integer
+        local_only:
+          title: Local Only
+          type: boolean
+        path:
+          title: Path
+          type: string
+        ranks:
+          additionalProperties:
+            type: integer
+          title: Ranks
+          type: object
+        repo:
+          title: Repo
+          type: string
+        score:
+          title: Score
+          type: number
+        symbol:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Symbol
+        text:
+          title: Text
+          type: string
+        type:
+          title: Type
+          type: string
+        url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Url
+      required:
+      - id
+      - repo
+      - path
+      - language
+      - type
+      - kind
+      - symbol
+      - line_start
+      - line_end
+      - text
+      - url
+      - score
+      - local_only
+      title: ChunkOut
+      type: object
+    Citation:
+      description: A chunk cited by an answer.
+      properties:
+        chunk_id:
+          title: Chunk Id
+          type: integer
+        line_end:
+          title: Line End
+          type: integer
+        line_start:
+          title: Line Start
+          type: integer
+        n:
+          title: N
+          type: integer
+        path:
+          title: Path
+          type: string
+        repo:
+          title: Repo
+          type: string
+        url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Url
+      required:
+      - n
+      - chunk_id
+      - repo
+      - path
+      - line_start
+      - line_end
+      - url
+      title: Citation
+      type: object
+    Conversation:
+      description: A full conversation.
+      properties:
+        created_at:
+          title: Created At
+          type: string
+        id:
+          title: Id
+          type: string
+        messages:
+          items:
+            $ref: '#/components/schemas/Message'
+          title: Messages
+          type: array
+        title:
+          title: Title
+          type: string
+      required:
+      - id
+      - title
+      - created_at
+      - messages
+      title: Conversation
+      type: object
+    ConversationSummary:
+      description: A conversation in the history.
+      properties:
+        created_at:
+          title: Created At
+          type: string
+        id:
+          title: Id
+          type: string
+        title:
+          title: Title
+          type: string
+      required:
+      - id
+      - title
+      - created_at
+      title: ConversationSummary
+      type: object
+    Facets:
+      description: Available filter values.
+      properties:
+        languages:
+          items:
+            type: string
+          title: Languages
+          type: array
+        owners:
+          items:
+            type: string
+          title: Owners
+          type: array
+        repos:
+          items:
+            type: string
+          title: Repos
+          type: array
+        types:
+          items:
+            type: string
+          title: Types
+          type: array
+      required:
+      - repos
+      - languages
+      - types
+      - owners
+      title: Facets
+      type: object
+    FileOut:
+      description: Content of an indexed file (lines holding secrets already masked).
+      properties:
+        content:
+          title: Content
+          type: string
+        language:
+          title: Language
+          type: string
+        masked_lines:
+          items:
+            type: integer
+          title: Masked Lines
+          type: array
+        path:
+          title: Path
+          type: string
+        repo:
+          title: Repo
+          type: string
+        url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Url
+      required:
+      - repo
+      - path
+      - language
+      - content
+      - masked_lines
+      - url
+      title: FileOut
+      type: object
+    Filters:
+      additionalProperties: false
+      description: Search filters; an empty list does not filter.
+      properties:
+        languages:
+          items:
+            type: string
+          maxItems: 50
+          title: Languages
+          type: array
+        owners:
+          items:
+            type: string
+          maxItems: 50
+          title: Owners
+          type: array
+        repos:
+          items:
+            type: string
+          maxItems: 200
+          title: Repos
+          type: array
+        types:
+          items:
+            enum:
+            - code
+            - test
+            - doc
+            - config
+            type: string
+          title: Types
+          type: array
+      title: Filters
+      type: object
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          title: Detail
+          type: array
+      title: HTTPValidationError
+      type: object
+    Health:
+      description: Probe answer.
+      properties:
+        status:
+          const: ok
+          title: Status
+          type: string
+      required:
+      - status
+      title: Health
+      type: object
+    IndexStatus:
+      description: State of the index update.
+      properties:
+        finished_at:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Finished At
+        message:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message
+        running:
+          title: Running
+          type: boolean
+        started_at:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Started At
+      required:
+      - running
+      title: IndexStatus
+      type: object
+    LocalModel:
+      description: A model of the local server.
+      properties:
+        default:
+          title: Default
+          type: boolean
+        installed:
+          title: Installed
+          type: boolean
+        name:
+          title: Name
+          type: string
+      required:
+      - name
+      - installed
+      - default
+      title: LocalModel
+      type: object
+    Me:
+      description: Identity seen by the API.
+      properties:
+        admin:
+          title: Admin
+          type: boolean
+        client:
+          title: Client
+          type: string
+        email:
+          title: Email
+          type: string
+        subject:
+          title: Subject
+          type: string
+      required:
+      - subject
+      - email
+      - client
+      - admin
+      title: Me
+      type: object
+    Message:
+      description: A message of a conversation.
+      properties:
+        citations:
+          items:
+            $ref: '#/components/schemas/Citation'
+          title: Citations
+          type: array
+        content:
+          title: Content
+          type: string
+        created_at:
+          title: Created At
+          type: string
+        model:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Model
+        role:
+          enum:
+          - user
+          - assistant
+          title: Role
+          type: string
+      required:
+      - role
+      - content
+      - model
+      - citations
+      - created_at
+      title: Message
+      type: object
+    Models:
+      description: Models offered on screen.
+      properties:
+        gateway:
+          items:
+            $ref: '#/components/schemas/RemoteModel'
+          title: Gateway
+          type: array
+        gateway_enabled:
+          title: Gateway Enabled
+          type: boolean
+        local:
+          items:
+            $ref: '#/components/schemas/LocalModel'
+          title: Local
+          type: array
+      required:
+      - local
+      - gateway
+      - gateway_enabled
+      title: Models
+      type: object
+    OidcPublic:
+      description: What a front needs to start an OIDC login (all public values).
+      properties:
+        desktop_client:
+          title: Desktop Client
+          type: string
+        issuer:
+          title: Issuer
+          type: string
+        web_client:
+          title: Web Client
+          type: string
+      required:
+      - issuer
+      - web_client
+      - desktop_client
+      title: OidcPublic
+      type: object
+    PublicConfig:
+      description: 'Served without a token: how the fronts should sign in, and in which language.'
+      properties:
+        auth_mode:
+          enum:
+          - token
+          - oidc
+          title: Auth Mode
+          type: string
+        language:
+          enum:
+          - en
+          - fr
+          title: Language
+          type: string
+        oidc:
+          anyOf:
+          - $ref: '#/components/schemas/OidcPublic'
+          - type: 'null'
+      required:
+      - auth_mode
+      - language
+      title: PublicConfig
+      type: object
+    QuestionRequest:
+      additionalProperties: false
+      description: Question to the chatbot.
+      properties:
+        conversation_id:
+          anyOf:
+          - pattern: ^[0-9a-f-]{36}$
+            type: string
+          - type: 'null'
+          title: Conversation Id
+        filters:
+          $ref: '#/components/schemas/Filters'
+        mode:
+          default: local
+          enum:
+          - local
+          - gateway
+          title: Mode
+          type: string
+        model:
+          anyOf:
+          - maxLength: 100
+            type: string
+          - type: 'null'
+          title: Model
+        question:
+          maxLength: 4000
+          minLength: 1
+          title: Question
+          type: string
+      required:
+      - question
+      title: QuestionRequest
+      type: object
+    RemoteModel:
+      description: A gateway model and its policy verdict.
+      properties:
+        alias:
+          title: Alias
+          type: string
+        allowed:
+          title: Allowed
+          type: boolean
+        provider:
+          title: Provider
+          type: string
+        reason:
+          title: Reason
+          type: string
+        source:
+          title: Source
+          type: string
+        verified_on:
+          title: Verified On
+          type: string
+        warning:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Warning
+      required:
+      - alias
+      - provider
+      - allowed
+      - reason
+      - verified_on
+      - source
+      title: RemoteModel
+      type: object
+    RepoOut:
+      description: An indexed repository.
+      properties:
+        chunks:
+          title: Chunks
+          type: integer
+        commit:
+          title: Commit
+          type: string
+        files:
+          title: Files
+          type: integer
+        indexed_at:
+          title: Indexed At
+          type: string
+        key:
+          title: Key
+          type: string
+        local_only:
+          title: Local Only
+          type: boolean
+      required:
+      - key
+      - commit
+      - files
+      - chunks
+      - indexed_at
+      - local_only
+      title: RepoOut
+      type: object
+    SearchRequest:
+      additionalProperties: false
+      description: Search without a chat model.
+      properties:
+        filters:
+          $ref: '#/components/schemas/Filters'
+        k:
+          default: 10
+          maximum: 30.0
+          minimum: 1.0
+          title: K
+          type: integer
+        mode:
+          default: hybrid
+          enum:
+          - hybrid
+          - lexical
+          - vector
+          title: Mode
+          type: string
+        question:
+          maxLength: 4000
+          minLength: 1
+          title: Question
+          type: string
+      required:
+      - question
+      title: SearchRequest
+      type: object
+    SearchResponse:
+      description: Search result.
+      properties:
+        duration_ms:
+          title: Duration Ms
+          type: integer
+        results:
+          items:
+            $ref: '#/components/schemas/ChunkOut'
+          title: Results
+          type: array
+      required:
+      - results
+      - duration_ms
+      title: SearchResponse
+      type: object
+    ValidationError:
+      properties:
+        ctx:
+          title: Context
+          type: object
+        input:
+          title: Input
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          title: Location
+          type: array
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+      type: object
+info:
+  description: Hybrid search and questions over your own code repositories.
+  title: code-atlas
+  version: 1.0.0
+openapi: 3.1.0
+paths:
+  /healthz:
+    get:
+      operationId: health_healthz_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+          description: Successful Response
+      summary: Health
+  /v1/chat:
+    post:
+      operationId: ask_v1_chat_post
+      parameters:
+      - in: header
+        name: authorization
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuestionRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Ask
+  /v1/chunks/{chunk_id}:
+    get:
+      operationId: chunk_v1_chunks__chunk_id__get
+      parameters:
+      - in: path
+        name: chunk_id
+        required: true
+        schema:
+          title: Chunk Id
+          type: integer
+      - in: header
+        name: authorization
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChunkOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Chunk
+  /v1/conversations:
+    get:
+      operationId: conversations_v1_conversations_get
+      parameters:
+      - in: header
+        name: authorization
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/ConversationSummary'
+                title: Response Conversations V1 Conversations Get
+                type: array
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Conversations
+  /v1/conversations/{conversation_id}:
+    delete:
+      operationId: delete_v1_conversations__conversation_id__delete
+      parameters:
+      - in: path
+        name: conversation_id
+        required: true
+        schema:
+          format: uuid
+          title: Conversation Id
+          type: string
+      - in: header
+        name: authorization
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Delete
+    get:
+      operationId: conversation_v1_conversations__conversation_id__get
+      parameters:
+      - in: path
+        name: conversation_id
+        required: true
+        schema:
+          format: uuid
+          title: Conversation Id
+          type: string
+      - in: header
+        name: authorization
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Conversation
+  /v1/facets:
+    get:
+      operationId: facets_v1_facets_get
+      parameters:
+      - in: header
+        name: authorization
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Facets'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Facets
+  /v1/files:
+    get:
+      operationId: file_v1_files_get
+      parameters:
+      - in: query
+        name: repo
+        required: true
+        schema:
+          maxLength: 300
+          title: Repo
+          type: string
+      - in: query
+        name: path
+        required: true
+        schema:
+          maxLength: 1000
+          title: Path
+          type: string
+      - in: header
+        name: authorization
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: File
+  /v1/index:
+    get:
+      operationId: index_status_v1_index_get
+      parameters:
+      - in: header
+        name: authorization
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IndexStatus'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Index Status
+    post:
+      operationId: start_index_v1_index_post
+      parameters:
+      - in: header
+        name: authorization
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IndexStatus'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Start Index
+  /v1/me:
+    get:
+      operationId: me_v1_me_get
+      parameters:
+      - in: header
+        name: authorization
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Me
+  /v1/models:
+    get:
+      operationId: models_v1_models_get
+      parameters:
+      - in: header
+        name: authorization
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Models'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Models
+  /v1/public-config:
+    get:
+      operationId: public_config_v1_public_config_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicConfig'
+          description: Successful Response
+      summary: Public Config
+  /v1/repos:
+    get:
+      operationId: repos_v1_repos_get
+      parameters:
+      - in: header
+        name: authorization
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/RepoOut'
+                title: Response Repos V1 Repos Get
+                type: array
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Repos
+  /v1/search:
+    post:
+      operationId: do_search_v1_search_post
+      parameters:
+      - in: header
+        name: authorization
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Do Search

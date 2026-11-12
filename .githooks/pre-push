@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Nothing leaves this machine with a private term: tree AND whole history are checked.
+set -euo pipefail
+root="$(git rev-parse --show-toplevel)"
+bash "$root/scripts/leak-guard.sh"
+bash "$root/scripts/leak-guard.sh" --history

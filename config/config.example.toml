@@ -1,0 +1,76 @@
+# code-atlas settings. Copy to ~/.config/code-atlas/config.toml (scripts/install.sh does it).
+# No secret goes in this file: it only names the 0600 files that hold them.
+
+language = "en"                 # interface language: "en" or "fr"
+
+[server]
+host = "127.0.0.1"              # the API refuses any other interface
+port = 8790
+web_origins = ["http://127.0.0.1:4173", "http://127.0.0.1:5173"]
+
+[auth]
+# "token": one random token in a 0600 file, for a single user on this machine (default).
+# "oidc":  access tokens from an OpenID Connect provider (Keycloak, Authentik, Auth0, Zitadel…).
+mode = "token"
+token_file = "~/.config/code-atlas/api-token"
+
+[auth.oidc]
+issuer = "https://id.example.com/realms/main"
+audience = "code-atlas"                       # the access token's "aud" must contain it
+clients = ["code-atlas-web", "code-atlas-desktop"]   # accepted "azp"; [] = any client
+web_client = "code-atlas-web"                 # public clients, PKCE S256
+desktop_client = "code-atlas-desktop"
+roles_claim = "resource_access.code-atlas.roles"     # Keycloak client roles; e.g. "groups"
+user_role = "user"                            # "" = no role required
+admin_role = "admin"
+allowed_emails = []                           # [] = any user holding the role
+require_email_verified = true
+token_type = "Bearer"                         # Keycloak "typ" claim; "" to skip
+admin_max_auth_age_s = 600                    # admin actions need a recent login
+
+[database]
+host = "127.0.0.1"
+port = 55432
+user = "atlas"
+name = "atlas"
+password_file = "~/.config/code-atlas/db-password"
+
+[corpus]
+roots = ["~/code"]              # every direct subfolder that is a git repository
+owners = []                     # e.g. ["my-org", "my-user"]; [] = every repository
+exclude_forks = false           # true: ask GitHub (gh CLI) and skip forks
+local_only = []                 # "owner/name": chunks never sent to a gateway
+max_file_bytes = 1_000_000
+
+[corpus.exclude]                # "owner/name" = "reason"
+# "someone/vendored-library" = "third-party code"
+
+[corpus.links]                  # source links per git host ({repo} {commit} {path} {start} {end})
+# "git.example.com" = "https://git.example.com/{repo}/src/commit/{commit}/{path}#L{start}-L{end}"
+
+[models]
+embedder = "Qwen/Qwen3-Embedding-0.6B"   # sentence-transformers model, run locally
+dimension = 1024                         # changing it requires a full re-index
+query_prompt = "query"
+reranker = "BAAI/bge-reranker-v2-m3"     # "" disables reranking
+local_url = "http://127.0.0.1:11434"     # any OpenAI-compatible server (Ollama, llama.cpp, vLLM)
+local_default = "qwen2.5-coder:14b"
+local = ["qwen2.5-coder:14b"]
+
+[gateway]
+# Optional remote models through an OpenAI-compatible gateway (LiteLLM…). Code extracts leave the
+# machine only for models listed in the policy file (see config/policy.example.toml).
+enabled = false
+url = "https://llm.example.com"
+key_file = "~/.config/code-atlas/gateway-key"
+policy_file = "~/.config/code-atlas/policy.toml"
+
+[limits]
+searches_per_minute = 60
+questions_per_minute = 10
+question_max_chars = 4000
+
+[thermal]                        # pause heavy work on a hot laptop
+enabled = true
+gpu_max_c = 80
+cpu_max_c = 88

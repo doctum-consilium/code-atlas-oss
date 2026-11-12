@@ -1,0 +1,25 @@
+# Settings of the end-to-end tests (CI or local): token mode by default, sample corpus,
+# fake models (CODE_ATLAS_MODELS=fake). Never used for real work.
+language = "en"
+
+[auth]
+mode = "token"
+token_file = "~/.config/code-atlas-e2e/api-token"
+
+[auth.oidc]
+issuer = "http://127.0.0.1:8180/realms/test"
+audience = "code-atlas"
+clients = ["code-atlas-web", "code-atlas-desktop"]
+roles_claim = "resource_access.code-atlas.roles"
+user_role = "user"
+admin_role = "admin"
+allowed_emails = ["e2e@example.org"]
+
+[database]
+password_file = "~/.config/code-atlas/db-password"
+
+[corpus]
+roots = []
+
+[thermal]
+enabled = false

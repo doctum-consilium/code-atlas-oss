@@ -1,0 +1,30 @@
+# Example evaluation set. Build your own with real questions about YOUR code: for each one, the
+# files that answer it (best first). Then run: atlas eval --questions your-questions.yaml
+#
+# These four questions match the small sample repository used by the end-to-end test
+# (scripts/e2e_prepare.py), so they can be run as-is against it.
+questions:
+  - id: q1
+    category: identifier
+    question: "What does can_receive_shared_feed do?"
+    expected:
+      - repo: acme/sample
+        path: app/sharing.py
+  - id: q2
+    category: concept
+    question: "How is the stop sized from the target gain?"
+    expected:
+      - repo: acme/sample
+        path: app/sharing.py
+  - id: q3
+    category: doc
+    question: "Where is reciprocal rank fusion explained?"
+    expected:
+      - repo: acme/sample
+        path: docs/plan.md
+  - id: q4
+    category: infra
+    question: "Which Kubernetes service is declared?"
+    expected:
+      - repo: acme/sample
+        path: k8s/app.yaml

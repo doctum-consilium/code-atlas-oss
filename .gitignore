@@ -1,0 +1,25 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+
+# Local settings and secrets never go into the repository
+.env
+.env.local
+config/config.toml
+config/policy.toml
+*-token
+*-password
+*.key
+*.pem
+
+# Results that describe YOUR code
+eval-results.md
+corpus.json
+corpus-report.md

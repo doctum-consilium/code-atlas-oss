@@ -1,0 +1,12 @@
+[Unit]
+Description=code-atlas — nightly index update
+
+[Timer]
+OnCalendar=*-*-* 03:30
+# Machine off at 03:30: catch up at the next start, with a delay so as not to heat up during
+# login.
+Persistent=true
+RandomizedDelaySec=15min
+
+[Install]
+WantedBy=timers.target

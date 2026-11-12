@@ -1,0 +1,25 @@
+name: code_atlas
+description: "code-atlas desktop: hybrid code search and questions over your own repositories."
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  crypto: ^3.0.6
+  flutter_markdown_plus: ^1.0.3
+  http: ^1.2.2
+  re_highlight: ^0.0.3
+  url_launcher: ^6.3.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  yaml: ^3.1.2
+
+flutter:
+  uses-material-design: true

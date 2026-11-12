@@ -1,0 +1,22 @@
+[Unit]
+Description=code-atlas — local API (127.0.0.1:8790)
+Documentation=file://@ROOT@/README.md
+After=network-online.target
+
+# Template: scripts/install.sh replaces @ROOT@, @UV@ and @PODMAN@ with this machine's paths.
+[Service]
+Type=simple
+WorkingDirectory=@ROOT@/backend
+# Database and local models first. systemd-run --scope: podman (and its rootless "pause"
+# process) lives in its own scope. Started directly here, it died with the service and broke
+# every podman command ("unable to create a new pause process").
+ExecStartPre=-/usr/bin/systemd-run --user --scope --quiet --collect @PODMAN@ start code-atlas-db code-atlas-ollama
+ExecStart=@UV@ run atlas serve
+Restart=on-failure
+RestartSec=10
+Nice=5
+# No NoNewPrivileges nor PrivateTmp here: rootless podman needs newuidmap to start its
+# containers. Protection lives elsewhere: loopback only, and a token on every request.
+
+[Install]
+WantedBy=default.target

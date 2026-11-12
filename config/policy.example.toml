@@ -1,0 +1,29 @@
+# Remote models allowed to receive code extracts. Copy to ~/.config/code-atlas/policy.toml.
+#
+# List only providers you have checked do not retain prompts (zero data retention, "ZDR"), with
+# the source and the date you checked. An alias missing from this file is always refused.
+#
+# check = "date"         re-read the provider's policy every `reread_after_days` (warning only)
+# check = "aws-bedrock"  read the account's Bedrock data-retention mode daily; "none" required
+
+[providers.scaleway]
+check = "date"
+verified_on = "2026-11-12"
+reread_after_days = 90
+source = "https://www.scaleway.com/en/docs/generative-apis/reference-content/data-privacy/"
+summary = "zero data retention by default for Generative APIs"
+
+[providers.bedrock]
+check = "aws-bedrock"
+region = "eu-west-1"
+verified_on = "2026-11-12"
+source = "https://docs.aws.amazon.com/bedrock/latest/userguide/data-retention.html"
+summary = "zero retention only when the account data-retention mode is 'none'"
+
+[[models]]
+alias = "scw-qwen3-coder-30b"   # the alias your gateway exposes
+provider = "scaleway"
+
+# [[models]]
+# alias = "bedrock-qwen3-coder-30b"
+# provider = "bedrock"

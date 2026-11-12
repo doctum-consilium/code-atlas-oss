@@ -1,0 +1,30 @@
+# Recommended Flutter lints, plus strict rules: dead code or an implicit type is an error, not a
+# warning that nobody reads any more.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+  errors:
+    unused_element: error
+    unused_field: error
+    unused_local_variable: error
+    unused_import: error
+    dead_code: error
+    missing_return: error
+  exclude:
+    - build/**
+    - linux/**
+
+linter:
+  rules:
+    prefer_const_constructors: true
+    prefer_final_locals: true
+    avoid_print: true
+    avoid_dynamic_calls: true
+    cancel_subscriptions: true
+    close_sinks: true
+    unawaited_futures: true
+    always_declare_return_types: true
