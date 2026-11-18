@@ -13,6 +13,11 @@ import pytest
 
 from atlas import corpus, db
 
+# Run by a git hook, the suite inherits GIT_DIR, GIT_INDEX_FILE… pointing at the real repository:
+# its ``git -C <throwaway>`` would write there. Dropped once for the whole suite, at load time.
+for _name in [n for n in os.environ if corpus.inherited_git_variable(n)]:
+    del os.environ[_name]
+
 TABLES = ("messages", "conversations", "chunks", "files", "repos")
 DIMENSION = 1024
 
