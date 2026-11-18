@@ -14,10 +14,11 @@ Secret detection lives in :mod:`atlas.secrets`; this module has no third-party d
 from __future__ import annotations
 
 import fnmatch
+import os
 import re
 import subprocess
 from collections import Counter
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
@@ -222,6 +223,44 @@ def parse_remote(url: str | None) -> tuple[str, str, str] | None:
     return match["host"].lower(), match["owner"], match["name"]
 
 
+# Variables a git hook (pre-commit, pre-push) exports towards ITS repository. Inherited, they make
+# git read or write that repository instead of the one given to ``git -C``: always dropped.
+_INHERITED_GIT = frozenset(
+    {
+        "GIT_DIR",
+        "GIT_WORK_TREE",
+        "GIT_INDEX_FILE",
+        "GIT_OBJECT_DIRECTORY",
+        "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+        "GIT_COMMON_DIR",
+        "GIT_NAMESPACE",
+        "GIT_PREFIX",
+        "GIT_CEILING_DIRECTORIES",
+        "GIT_DISCOVERY_ACROSS_FILESYSTEM",
+        "GIT_CONFIG_PARAMETERS",
+        "GIT_CONFIG_COUNT",
+        "GIT_AUTHOR_NAME",
+        "GIT_AUTHOR_EMAIL",
+        "GIT_AUTHOR_DATE",
+        "GIT_COMMITTER_NAME",
+        "GIT_COMMITTER_EMAIL",
+        "GIT_COMMITTER_DATE",
+    }
+)
+_INHERITED_GIT_PREFIXES = ("GIT_CONFIG_KEY_", "GIT_CONFIG_VALUE_")
+
+
+def inherited_git_variable(name: str) -> bool:
+    """True for a git variable that binds to a repository or imposes an identity or a config."""
+    return name in _INHERITED_GIT or name.startswith(_INHERITED_GIT_PREFIXES)
+
+
+def git_environment(base: Mapping[str, str] | None = None) -> dict[str, str]:
+    """Environment for a git subprocess, without the variables a hook may have exported."""
+    source = os.environ if base is None else base
+    return {name: value for name, value in source.items() if not inherited_git_variable(name)}
+
+
 def _git(repo: Path, *args: str) -> str:
     result = subprocess.run(
         ["git", "-C", str(repo), *args],
@@ -230,6 +269,7 @@ def _git(repo: Path, *args: str) -> str:
         encoding="utf-8",
         errors="surrogateescape",  # a non UTF-8 file name must not stop everything
         check=False,
+        env=git_environment(),
     )
     return result.stdout if result.returncode == 0 else ""
 
